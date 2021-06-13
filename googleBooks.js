@@ -8,9 +8,9 @@ var readingListCollection = [];
 */
 function addToReadingList(bookList){
     console.log("Enter any digit 0 - " + (bookList.length - 1) + " to add that title to your list or search for a new book");
-    console.log(" Or you can enter a new query, or enter 'reading list' or 'quit'");
+    console.log("Or you can enter a new query, or enter 'reading list' or 'quit'");
 
-    process.stdin.on('data', input => {
+    process.stdin.once('data', input => {
         let userInput = parseInt(input.toString());
 
         if(userInput >= 0 && userInput < bookList.length){
@@ -24,12 +24,12 @@ function addToReadingList(bookList){
     and prints it out
 */
 function viewReadingList(){
-    console.log("Enter a book you wish to search, or enter 'quit' to terminate ");
-    console.log("Your reading list: ");
+    console.log("\nYour reading list:");
 
-    for(i = 0; i < readingListCollection.length; ++i){
+    for(var i = 0; i < readingListCollection.length; ++i){
         console.log(readingListCollection[i]);
     }
+    console.log("\nEnter a book you wish to search, or enter 'quit' to terminate");
 }
 
 /*
@@ -54,7 +54,7 @@ function fetchBooks(query){
     https.get('https://www.googleapis.com/books/v1/volumes?' + request_params, (res) => {
     
         if(res.statusCode === 400){
-            console.log("Please enter a search query or enter 'quit' to exit");
+            console.log("Please enter a search query or enter 'quit' to terminate");
             return;
         }
 
@@ -81,8 +81,8 @@ function fetchBooks(query){
     given bookList and start accessing the relevant information to display
     while checking if those pieces of information exist.
 */
-
 function displayBookInformation(jsonResponse){
+    console.log("\nResults:");
     var result = '';
     let bookList = jsonResponse.items;
 
@@ -98,7 +98,7 @@ function displayBookInformation(jsonResponse){
                 result += " " + authors[l];
             }
         }else{
-            result += " n/a";
+            result += "n/a";
         }
         
         if(publisher){
@@ -110,13 +110,13 @@ function displayBookInformation(jsonResponse){
         console.log(result);
         result = '';
     }
+    console.log("\n");
 }
 
 /*
     This method starts the program. It asks for the user input. The user can either 
     view their reading list, terminate the program, or search for a book.
 */
-
 function getUserQuery(){
     console.log("Enter a book you wish to search, Enter 'Reading List' to view your list, or enter 'quit' to terminate ");
    
