@@ -4,7 +4,8 @@ Start the program with node googleBooks.js
 
 ## Process and Approach 
 
-You can find all commits and changes in the develop branch. I started off this project by creating subproblems. 
+I created a develop branch to start this project. You can find the commits there, but It will be merged to main. 
+I started off this project by creating subproblems. 
 
 1. I started by figuring out how to get user input and convert it to a useable string
 2. Created a basic google books api call with no user input. I wanted to make sure the api call was correct and fullfilled the requirements 
