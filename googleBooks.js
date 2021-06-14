@@ -1,36 +1,30 @@
+const https = require('https');
+const querystring = require('querystring');
 var readingListCollection = [];
 
-/*  
-    Given a list of books from the api, I ask the user to enter a number 
-    Between 0 and bookList.length - 1. That number corresponds to a book
-    that will be added to their reading list. If not, the user can 
-    search a new book, view their reading list, or quit
+/*
+    This method starts the program. It asks for the user input. The user can either 
+    view their reading list, terminate the program, or search for a book.
 */
-function addToReadingList(bookList){
-    console.log("Enter any digit 0 - " + (bookList.length - 1) + " to add that title to your list or search for a new book");
-    console.log("Or you can enter a new query, or enter 'reading list' or 'quit'");
-
-    process.stdin.once('data', input => {
-        let userInput = parseInt(input.toString());
-
-        if(userInput >= 0 && userInput < bookList.length){
-            readingListCollection.push(bookList[userInput].volumeInfo.title);
+function getUserQuery(){
+    console.log("Enter a book you wish to search, Enter 'Reading List' to view your list, or enter 'quit' to terminate ");
+   
+    process.stdin.on('data', userInput => {
+        let query = userInput.toString().toLowerCase().trim();
+        
+        if(query === "reading list"){
+            viewReadingList();
+        }else if(query === "quit"){
+            process.exit();
+        }else if(didEnterInteger(query)){
+            console.log("\nPlease enter a new query");
+        }else{
+            fetchBooks(query);
         }
     });
 }
 
-/*
-    This method just loops through the users local reading list collection
-    and prints it out
-*/
-function viewReadingList(){
-    console.log("\nYour reading list:");
-
-    for(var i = 0; i < readingListCollection.length; ++i){
-        console.log(readingListCollection[i]);
-    }
-    console.log("\nEnter a book you wish to search, or enter 'quit' to terminate");
-}
+getUserQuery();
 
 /*
     Given a query, I make an api call with the parameters of the query 
@@ -40,9 +34,6 @@ function viewReadingList(){
     reading list via the AddToReadingList method 
 */
 function fetchBooks(query){
-    const https = require('https');
-    const querystring = require('querystring');
-
     const parameters = {
         q: query, 
         startIndex: 0,
@@ -54,7 +45,7 @@ function fetchBooks(query){
     https.get('https://www.googleapis.com/books/v1/volumes?' + request_params, (res) => {
     
         if(res.statusCode === 400){
-            console.log("Please enter a search query or enter 'quit' to terminate");
+            console.log("\nPlease enter a query, or enter 'reading list' or 'quit'");
             return;
         }
 
@@ -67,7 +58,7 @@ function fetchBooks(query){
             let jsonResponse = JSON.parse(body);
 
             if(jsonResponse.totalItems == 0){
-                console.log("No books found with your query. Enter a new query, or enter 'reading list' or 'quit'");
+                console.log("\nNo books found with your query. Enter a new query, or enter 'reading list' or 'quit'");
             }else{
                 displayBookInformation(jsonResponse);
                 addToReadingList(jsonResponse.items);
@@ -113,24 +104,48 @@ function displayBookInformation(jsonResponse){
     console.log("\n");
 }
 
-/*
-    This method starts the program. It asks for the user input. The user can either 
-    view their reading list, terminate the program, or search for a book.
+/*  
+    Given a list of books from the api, I ask the user to enter a number 
+    Between 0 and bookList.length - 1. That number corresponds to a book
+    that will be added to their reading list. If not, the user can 
+    search a new book, view their reading list, or quit
 */
-function getUserQuery(){
-    console.log("Enter a book you wish to search, Enter 'Reading List' to view your list, or enter 'quit' to terminate ");
-   
-    process.stdin.on('data', userInput => {
-        let query = userInput.toString().toLowerCase().trim();
-        
-        if(query === "reading list"){
-            viewReadingList();
-        }else if(query === "quit"){
-            process.exit();
-        }else{
-            fetchBooks(query);
+function addToReadingList(bookList){
+    console.log("Enter any digit 0 - " + (bookList.length - 1) + " to add that title to your list or search for a new book");
+    console.log("Or you can enter a new query, or enter 'reading list' or 'quit'");
+
+    process.stdin.once('data', input => {
+        let userInput = parseInt(input.toString());
+
+        if(userInput >= 0 && userInput < bookList.length){
+            readingListCollection.push(bookList[userInput].volumeInfo.title);
+            console.log(bookList[userInput].volumeInfo.title + " was added to your reading list!");
         }
     });
 }
 
-getUserQuery();
+/*
+    This method just loops through the users local reading list collection
+    and prints it out
+*/
+function viewReadingList(){
+    console.log("\nYour reading list:");
+
+    for(var i = 0; i < readingListCollection.length; ++i){
+        console.log(readingListCollection[i]);
+    }
+    console.log("\nEnter a book you wish to search, or enter 'quit' to terminate");
+}
+
+/*
+    This method checks to see if a single integer was entered. This way 
+    a new query will not be displayed when trying to add to the reading list.
+    Returns true if an integer was entered, returns false otherwise.
+*/
+function didEnterInteger(userInput){
+    if(userInput.charCodeAt(0) >= 48 && userInput.charCodeAt(0) <= 57){
+        return true;
+    }else{
+        return false;
+    }
+}
