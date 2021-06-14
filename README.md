@@ -1,4 +1,4 @@
-# AQ-8th-Light
+# Armando Quintana-8th-Light
 
 Start the program with node googleBooks.js
 
