@@ -173,9 +173,17 @@ function validReadingListInput(userInput, bookListLength){
     Returns true if an integer was entered, returns false otherwise.
 */
 function didEnterInteger(userInput){
-    if(userInput.charCodeAt(0) >= 48 && userInput.charCodeAt(0) <= 57){
-        return true;
-    }else{
-        return false;
+    var isOnlyInteger = true;
+
+    for(let i = 0; i < userInput.length; i++) {
+        if(!(userInput.charCodeAt(i) >= 48 && userInput.charCodeAt(i) <= 57)){
+            isOnlyInteger = false;
+        }
     }
+    return isOnlyInteger;
 }
+
+module.exports = {
+    validReadingListInput,
+    didEnterInteger,
+};
