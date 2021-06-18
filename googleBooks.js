@@ -1,6 +1,8 @@
 const https = require('https');
 const querystring = require('querystring');
-var readingListCollection = [];
+const User = require("./user");
+
+var user = new User();
 
 /*
     This method starts the program. It asks for the user input. The user can either 
@@ -11,9 +13,10 @@ function getUserQuery(){
    
     process.stdin.on('data', userInput => {
         let query = userInput.toString().toLowerCase().trim();
-        
+        console.log("");
+
         if(query === "reading list"){
-            viewReadingList();
+            user.displayReadingList();
         }else if(query === "quit"){
             process.exit();
         }else if(didEnterInteger(query)){
@@ -60,81 +63,108 @@ function fetchBooks(query){
             if(jsonResponse.totalItems == 0){
                 console.log("\nNo books found with your query. Enter a new query, or enter 'reading list' or 'quit'");
             }else{
-                displayBookInformation(jsonResponse);
-                addToReadingList(jsonResponse.items);
+                let apiResults = parseApiResponse(jsonResponse);
+                printBookInformation(apiResults);
+                toggleReadingListMenu(jsonResponse.items);
             }
         });
     });
 }
 
 /*
-    Given the jsonResponse from the api call, I loop through the 
-    given bookList and start accessing the relevant information to display
-    while checking if those pieces of information exist.
+    Given the jsonResponse from the api call, I am storing the relevant 
+    information into a 2D array where it can be printed by the printBookInformation method
 */
-function displayBookInformation(jsonResponse){
-    console.log("\nResults:");
-    var result = '';
+function parseApiResponse(jsonResponse){
+    var results = [];
     let bookList = jsonResponse.items;
 
     for(var i = 0; i < bookList.length; ++i){
-        let publisher = bookList[i].volumeInfo.publisher;
-        let authors = bookList[i].volumeInfo.authors;
-        result += "Title: " + bookList[i].volumeInfo.title + " Author(s): ";
-    
-        if(authors && authors.length == 1){
-            result += authors[0];
-        }else if(authors){
-            for(var l = 0; l < authors.length; ++l){
-                result += " " + authors[l];
-            }
-        }else{
-            result += "n/a";
-        }
-        
-        if(publisher){
-            result += " Publisher: " + publisher;
-        }else{
-            result += " Publisher: n/a";
+        var publisher = bookList[i].volumeInfo.publisher;
+        var authors = bookList[i].volumeInfo.authors;
+
+        if(!publisher){
+            publisher = "n/a";
         }
 
-        console.log(result);
-        result = '';
+        if(!authors){
+            authors = "n/a";
+        }
+        results.push([bookList[i].volumeInfo.title, authors, publisher]);
     }
-    console.log("\n");
+    return results;
+}
+
+/* Loops through the results array that was created above 
+   and simply prints them.
+*/
+function printBookInformation(results){
+    console.log("Results: \n");
+
+    for(var i = 0; i < results.length; ++i){
+        for(var l = 0; l < results[i].length; ++l){
+            switch(l){
+                case 0:
+                    console.log("Title: " + results[i][0]);
+                    break;
+                case 1:
+                    printAuthors(results[i][1]);
+                    break;
+                case 2:
+                    console.log("Publisher: " + results[i][2]);
+                    break;
+            }
+        }
+        console.log("");
+    }
+}
+
+/* A Helper function that prints out the authors of 
+   each book in the given list of authors
+*/
+function printAuthors(authors){
+    if(authors.length === 1){
+        console.log("Author: " + authors[0]);
+    }else{
+        var authorsString = "";
+
+        for(var i = 0; i < authors.length; ++i){
+            authorsString += authors[i] + ", ";
+        }
+        console.log("Authors: " + authorsString.slice(0, -2)); //slice to remove the last ", "
+    }
 }
 
 /*  
     Given a list of books from the api, I ask the user to enter a number 
-    Between 0 and bookList.length - 1. That number corresponds to a book
+    Between 1 and bookList.length. That number corresponds to a book
     that will be added to their reading list. If not, the user can 
     search a new book, view their reading list, or quit
 */
-function addToReadingList(bookList){
-    console.log("Enter any digit 0 - " + (bookList.length - 1) + " to add that title to your list or search for a new book");
+function toggleReadingListMenu(bookList){
+    console.log("Enter any digit 1 - " + (bookList.length) + " to add that title to your list or search for a new book");
     console.log("Or you can enter a new query, or enter 'reading list' or 'quit'");
 
     process.stdin.once('data', input => {
         let userInput = parseInt(input.toString());
 
-        if(userInput >= 0 && userInput < bookList.length){
-            readingListCollection.push(bookList[userInput].volumeInfo.title);
-            console.log(bookList[userInput].volumeInfo.title + " was added to your reading list!");
+        if(validReadingListInput(userInput, bookList.length)){
+            let correctedUserInput = userInput - 1; //Must subtract by 1 to match the array indices.
+            user.addToReadingList(bookList[correctedUserInput].volumeInfo.title);
+            console.log(bookList[correctedUserInput].volumeInfo.title + " was added to your reading list!");
         }
     });
 }
 
-/*
-    This method just loops through the users local reading list collection
-    and prints it out
+/* Helper function that checks if the user's input is 
+   vaid (must be between 1 and the total number of books in the list)
 */
-function viewReadingList(){
-    console.log("\nYour reading list:");
-
-    for(var i = 0; i < readingListCollection.length; ++i){
-        console.log(readingListCollection[i]);
+function validReadingListInput(userInput, bookListLength){
+    if(userInput >= 1 && userInput <= bookListLength){
+        return true;
+    }else{
+        return false;
     }
-    console.log("\nEnter a book you wish to search, or enter 'quit' to terminate");
 }
 
 /*
@@ -143,9 +173,17 @@ function viewReadingList(){
     Returns true if an integer was entered, returns false otherwise.
 */
 function didEnterInteger(userInput){
-    if(userInput.charCodeAt(0) >= 48 && userInput.charCodeAt(0) <= 57){
-        return true;
-    }else{
-        return false;
+    var isOnlyInteger = true;
+
+    for(let i = 0; i < userInput.length; i++) {
+        if(!(userInput.charCodeAt(i) >= 48 && userInput.charCodeAt(i) <= 57)){
+            isOnlyInteger = false;
+        }
     }
+    return isOnlyInteger;
 }
+
+module.exports = {
+    validReadingListInput,
+    didEnterInteger,
+};
