@@ -19,7 +19,8 @@ Start the program with node googleBooks.js
 Things I could have improved upon:
 
 I think my googleBooks.js file became very large (180 lines). I would want to look into what is the best way to arrange the code or even move out some of 
-the helper functions to a new file. However, for the purpose of this task, I simply arranged the code by imoportance. Lastly, I think I could've created more 
+the helper functions to a new file. However, for the purpose of this task, I simply arranged the code by importance. I also would've wanted to include all
+of the pieces of information in the reading list. However, for the time I have left, I thought only displaying the title was fine. Lastly, I think I could've created more 
 tests. I tested the most "obvious" testable functions. However, I would have loved to learn more about Jest and testing in general. 
 
 # Submission 1:
